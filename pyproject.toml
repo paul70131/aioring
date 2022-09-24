@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "cython"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aioring"
+version = "0.1.0"
+description = "Asynchronous I/O ring"
+readme = "README.md"
+license = {file = "LICENSE"}
+
+
+[project.urls]
+source = "https://github.com/paul70131/aioring"
