@@ -40,6 +40,13 @@ if platform.system() == 'Linux':
     # run configure in subprocess
     dir = os.getcwd()
     os.chdir("aioring/lib/liburing/")
+    # replace \r\n with \n in configure
+    with open("configure", "r") as f:
+        content = f.read()
+
+    with open("configure", "w") as f:
+        f.write(content.replace("\r\n", "\n"))
+
     subprocess.run(["bash", "configure"])
     os.chdir(dir)
     linux_ring = Extension(
@@ -73,6 +80,7 @@ setup(
     package_dir={'aioring': 'aioring'},
     zip_safe=False,
     long_description=open('README.md').read(),
-    version='0.1.0',
+    long_description_content_type = "text/markdown",
+    version='0.1.1',
     author="Paul K."
 )
