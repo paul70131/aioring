@@ -216,7 +216,6 @@ cdef class ThreadPoolIoRing(IoRing):
     cdef list scheduled_ops
     cdef list completed_tasks
     cdef object thread_pool_executor
-    cdef object event
     cdef bint closed
 
     def __init__(self, entries=256):

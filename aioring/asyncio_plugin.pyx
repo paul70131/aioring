@@ -33,6 +33,7 @@ cdef class IoRingAsyncioPlugin:
 
     def on_ring_events(self):
         cdef list cqes
+        self.ring.event.clear()
         try:
             cqes = self.ring.get_completions()
         except:

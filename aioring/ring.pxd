@@ -3,6 +3,8 @@ cdef class IoRingCqe:
     cpdef int get_res(self)
 
 cdef class IoRing:
+    cdef public object event
+
     cpdef object get_event(self)
     cpdef list get_completions(self)
     cpdef int cancel_sqe(self, object user_data)

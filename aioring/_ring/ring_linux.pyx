@@ -108,7 +108,9 @@ cdef class IoUringEvent:
 
     cpdef void wait(self):
         os.eventfd_read(self.fd)
-            
+        
+    cpdef void clear(self):
+        self.wait()
 
     cpdef void close(self):
         os.close(self.fd)
@@ -116,7 +118,6 @@ cdef class IoUringEvent:
 
 cdef class IoUring(IoRing):
     cdef io_uring ring
-    cdef object event
     cdef bint closed
 
     def __init__(self, entries=256):
