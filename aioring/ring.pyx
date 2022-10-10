@@ -13,15 +13,14 @@ cdef class IoRing:
     cpdef list get_completions(self):
         raise NotImplementedError()
 
-    cpdef int cancel_sqe(self, object user_data):
-        raise NotImplementedError()
-
     cpdef int submit(self) except -1:
         raise NotImplementedError()
 
     cpdef void close(self)  except *:
         raise NotImplementedError()
 
+    cpdef int schedule_cancel(self, object sqe) except -1:
+        raise NotImplementedError()
 
     cpdef bytes schedule_read(self, object user_data, int fd, int count, unsigned long offset):
         raise NotImplementedError()

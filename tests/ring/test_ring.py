@@ -118,7 +118,7 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                     self.assertEqual(completions[0].get_res(), -target)
                     self.assertEqual(completions[0].get_data(), 0xAAAA)
 
-    def atest_schedule_write_single(self):
+    def test_schedule_write_single(self):
         for ring in self.rings:
             with self.subTest(ring=ring):
                 with open("tests/data/new.txt", "wb+") as f:
@@ -137,7 +137,7 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                     self.assertEqual(file_data, data)
         os.unlink("tests/data/new.txt")
 
-    def atest_schedule_write_multiple(self):
+    def test_schedule_write_multiple(self):
         for ring in self.rings:
             with self.subTest(ring=ring):
                 with open("tests/data/new.txt", "wb+") as f:
@@ -158,7 +158,7 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                     self.assertEqual(file_data, op_data[:len(file_data)])
         os.unlink("tests/data/new.txt")
 
-    def atest_schedule_write_errors_linux(self):
+    def test_schedule_write_errors_linux(self):
         if platform.system() != "Linux":
             self.skipTest("Wrong OS")
         # EBADF, EISDIR
@@ -199,7 +199,7 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                     self.assertEqual(completions[0].get_res(), -target)
                     self.assertEqual(completions[0].get_data(), 0xAAAA)
 
-    def atest_schedule_stat(self):
+    def test_schedule_stat(self):
         for ring in self.rings:
             with self.subTest(ring=ring):
                 data = 0xAAAA
@@ -219,7 +219,7 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                 for field in fields:
                     self.assertEqual(getattr(stat_1, field), getattr(stat_2, field))
 
-    def atest_schedule_stat_errors_linux(self):
+    def test_schedule_stat_errors_linux(self):
         if platform.system() != "Linux":
             self.skipTest("Wrong OS")
         # EACCESS, EBADF, ENAMETOOLONG, ENOENT, ENOTDIR
@@ -419,3 +419,21 @@ class RingImplementationsTest(BaseTestRingImplementationsTest):
                             buffer = ring.schedule_read(0, 0, 1, 0)
                         self.assertRaises(RingFullError, ring.schedule_read, 0, 0, 1, 0)
                         ring.close()
+
+    def test_cancel(self):
+        for ring in self.rings:
+            with self.subTest(ring=ring):
+                buffer = ring.schedule_read(0xABCDEF, 0, 1, 0)
+                ring.schedule_cancel(0xABCDEF)
+                ring.submit()
+                completions = []
+                while not completions:
+                    time.sleep(0)
+                    completions = ring.get_completions()
+
+                self.assertGreater(len(completions), 0)
+                for completion in completions:
+                    if completion.get_data() == None:
+                        continue
+                    self.assertEqual(completion.get_data(), 0xABCDEF)
+                    self.assertEqual(completion.get_res(), -125)

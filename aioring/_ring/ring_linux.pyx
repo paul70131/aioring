@@ -5,7 +5,7 @@ from aioring._ring.linux cimport AT_FDCWD, statx, statx_timestamp, AT_EMPTY_PATH
 
 from aioring._ring.liburing cimport io_uring, io_uring_cqe, io_uring_sqe
 from aioring._ring.liburing cimport io_uring_queue_init, io_uring_queue_exit, io_uring_register_eventfd, io_uring_peek_cqe, io_uring_submit, io_uring_get_sqe, io_uring_sqe_set_data, io_uring_cqe_seen
-from aioring._ring.liburing cimport io_uring_prep_read, io_uring_prep_write, io_uring_prep_statx, io_uring_prep_openat
+from aioring._ring.liburing cimport io_uring_prep_read, io_uring_prep_write, io_uring_prep_statx, io_uring_prep_openat, io_uring_prep_cancel
 
 import os
 import warnings
@@ -215,4 +215,9 @@ cdef class IoUring(IoRing):
         io_uring_prep_openat(sqe, dirfd, path, flags, mode)
         io_uring_sqe_set_data(sqe, <void*>user_data)
 
-    #cpdef int schedule_splice(self, object user_data, int fd_in, unsigned long off_in, int fd_out, unsigned long off_out, int count, int flags) except -1
+    cpdef int schedule_cancel(self, object target) except -1:
+        cdef io_uring_sqe* sqe = io_uring_get_sqe(&self.ring)
+        if sqe == NULL:
+            raise RingFullError()
+        io_uring_prep_cancel(sqe, <void*>target, 0)
+        io_uring_sqe_set_data(sqe, <void*>None)

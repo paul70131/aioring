@@ -5,6 +5,7 @@ from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 
 import os
+import errno
 import warnings
 import threading
 
@@ -142,6 +143,9 @@ cdef class _IoRingSqe:
         self.user_data = user_data
         self.func = func
 
+    cpdef object get_data(self):
+        return self.user_data
+
 cdef _copy_to_bytes_obj(bytes target, bytes source, long size):
     cdef char* target_ptr = <char*>target
     cdef char* source_ptr = <char*>source
@@ -242,9 +246,6 @@ cdef class ThreadPoolIoRing(IoRing):
         self.completed_tasks = []
         return completions
 
-    cpdef int cancel_sqe(self, object user_data):
-        return -1
-
     cpdef int submit(self) except -1:
         for sqe in self.scheduled_ops:
             self._submit_to_executor(sqe)
@@ -319,3 +320,12 @@ cdef class ThreadPoolIoRing(IoRing):
                 partial(_open, path, dirfd, flags, mode)
             )
         )
+
+    cpdef int schedule_cancel(self, object sqe) except -1:
+        for op in self.scheduled_ops:
+            if op.get_data() == sqe:
+                self.scheduled_ops.remove(op)
+                self.completed_tasks.append(_IoRingCqe(
+                    -125, #ECANCELLED,
+                    sqe
+                ))
