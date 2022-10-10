@@ -46,4 +46,3 @@ async with await aio.open("file.txt", "w") as f:
 * [X] fileIO
 * [ ] Windows IoRing
 * [ ] socketIO
-* [ ] directory operations? (io_uring currently does not support readdir)
