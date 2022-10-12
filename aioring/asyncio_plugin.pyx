@@ -11,6 +11,7 @@ def loop_close(loop):
         loop._aioring.close()
     loop._org_close()
 
+
 cdef class IoRingAsyncioPlugin:
 #    cdef public object ring
 #    cdef bint close_ring_on_exit
@@ -40,18 +41,32 @@ cdef class IoRingAsyncioPlugin:
             return
         # this has to be called in the loop thread
         for cqe in cqes:
+            future = cqe.get_data()
+            if not future:
+                continue
+            if future.cancelled():
+                continue
             if cqe.get_res() < 0:
-                cqe.get_data().set_exception(OSError(-cqe.get_res(), os.strerror(-cqe.get_res())))
+                future.set_exception(OSError(-cqe.get_res(), os.strerror(-cqe.get_res())))
             else:
-                cqe.get_data().set_result(cqe.get_res())
+                future.set_result(cqe.get_res())
     
     cpdef int close(self) except -1:
         if self.close_ring_on_exit:
             self.ring.close()
         self.closed = True
 
+    def _future_done_db(self, future):
+        if future.cancelled():
+            self.ring.schedule_cancel(future)
+            self.ring.submit()
+
+
+
     cpdef object create_future(self):
-        return self.loop.create_future()
+        cdef object future = self.loop.create_future()
+        future.add_done_callback(self._future_done_db)
+        return future
 
     def __del__(self):
         if not self.closed:
