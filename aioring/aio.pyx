@@ -152,10 +152,10 @@ cdef long POS_NONE = 0xffffffffffffffff
 
 
 cdef class AsyncIOBase:
-    cdef bint __closed
+    cdef bint _closed
 
     def __init__(self):
-        self.__closed = False
+        self._closed = False
 
     cdef int _unsupported(self, str name) except -1:
         """Internal: raise an OSError exception for unsupported operations."""
@@ -182,11 +182,11 @@ cdef class AsyncIOBase:
 
         This method has no effect if the file is already closed.
         """
-        if not self.__closed:
+        if not self._closed:
             try:
                 await self.flush()
             finally:
-                self.__closed = True
+                self._closed = True
 
     def __del__(self):
         """Destructor.  Calls close()."""
@@ -210,7 +210,7 @@ cdef class AsyncIOBase:
             # the end users, we suppress the traceback.
             try:
                 os.close(self.fileno())
-                self.__closed = True
+                self._closed = True
             except:
                 pass
 
@@ -244,10 +244,10 @@ cdef class AsyncIOBase:
 
     @property
     def closed(self):
-        return self.__closed
+        return self._closed
 
     cdef int _checkClosed(self, str msg=None) except -1:
-        if self.__closed:
+        if self._closed:
             raise ValueError("I/O operation on closed file."
                              if msg is None else msg)
 
@@ -432,12 +432,12 @@ cdef class _AsyncBufferedIOMixin(AsyncBufferedIOBase):
         return await self.raw.truncate(pos)
 
     async def flush(self):
-        if self.__closed:
+        if self._closed:
             raise ValueError("flush on closed file")
         await self.raw.flush()
 
     async def close(self):
-        if self.raw is not None and not self.__closed:
+        if self.raw is not None and not self._closed:
             try:
                 await self.flush()
             finally:
@@ -1127,7 +1127,7 @@ cdef class AsyncFileIO(AsyncRawIOBase):
                     await aos.close(self._fd)
             finally:
                 await super().close()
-                self.__closed = True
+                self._closed = True
 
     cpdef bint seekable(self):
         return True
