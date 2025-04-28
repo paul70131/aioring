@@ -78,6 +78,6 @@ setup(
     zip_safe=False,
     long_description=open('README.md').read(),
     long_description_content_type = "text/markdown",
-    version='0.1.2',
+    version='0.1.3',
     author="Paul K."
 )
