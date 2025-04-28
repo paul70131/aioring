@@ -1,6 +1,3 @@
-from distutils.command.build import build
-from distutils.command.build_ext import build_ext
-import warnings
 from setuptools import setup, Extension, find_packages
 
 from Cython.Build import cythonize
